@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Integration</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const SITEID = 'YOUR_SITE_ID';
+            const COOKIE_EXPIRATION_DAYS = 365;
+            const TIME_SPENT_INTERVAL = 30000; // 30 seconds
+
+            function generateUserId() {
+                const userId = 'user-' + Math.random().toString(36).substr(2, 9);
+                setCookie('USERID', userId, COOKIE_EXPIRATION_DAYS);
+                return userId;
+            }
+
+            function generateSessionId() {
+                return 'session-' + Math.random().toString(36).substr(2, 9);
+            }
+
+            function setCookie(name, value, days) {
+                const expires = new Date(Date.now() + days * 864e5).toUTCString();
+                document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+            }
+
+            function getCookie(name) {
+                return document.cookie.split('; ').reduce((r, v) => {
+                    const parts = v.split('=');
+                    return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+                }, '');
+            }
+
+            function sendAnalyticsData(data, endpoint) {
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log(`Data sent to ${endpoint}:`, data);
+                })
+                .catch(error => {
+                    console.error(`Error sending data to ${endpoint}:`, error);
+                });
+            }
+
+            // Define datasets
+            const dataset1 = {
+                SITEID: SITEID,
+                USERID: getCookie('USERID') || generateUserId(),
+                SESSIONID: generateSessionId(),
+                URL: window.location.href,
+                USERAGENT: navigator.userAgent,
+                LANGUAGE: navigator.language,
+                RESOLUTION: `${window.screen.width}x${window.screen.height}`,
+                BTIME: new Date().toISOString(),
+                CREATEDTIME: new Date().toISOString(),
+                TIME_SPENT: 0,
+                IP: '',
+                CITY: '',
+                REGION: '',
+                COUNTRY_NAME: '',
+                TIMEZONE: '',
+                ISP: '',
+                ASN: '',
+                ASNNAME: '',
+                ASNTYPE: '',
+                EVENT: 'dataset1_event',
+                EACTION: 'Dataset 1 Button Clicked'
+                // Add more fields as needed
+            };
+
+            const dataset2 = {
+                ASN: "Another ASN",
+                ASNNAME: "Another ASNNAME",
+                ASNTYPE: "Another ASNTYPE",
+                BTIME: new Date().toISOString(),
+                CITY: "Another City",
+                COUNTRY_NAME: "Another Country",
+                CREATEDTIME: new Date().toISOString(),
+                EACTION: "Dataset 2 Button Clicked",
+                EVENT: "page_load",
+                IP: "203.0.113.1", // Different IP for dataset2
+                ISP: "Another ISP",
+                LANGUAGE: "fr-FR",
+                REGION: "Another Region",
+                RESOLUTION: "1280x720",
+                SESSIONID: generateSessionId(),
+                SITEID: SITEID,
+                TIMEZONE: "Another Timezone",
+                TIME_SPENT: 0,
+                URL: "https://example.com/dataset2",
+                USERAGENT: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                USERID: generateUserId()
+            };
+
+            // Capture and send time spent on page
+            setInterval(() => {
+                dataset1.TIME_SPENT += 30; // Increase time spent by 30 seconds
+                dataset1.EVENT = 'time_update';
+                dataset1.BTIME = new Date().toISOString();
+                sendAnalyticsData(dataset1, 'https://eoqkj1boxgtoth6.m.pipedream.net'); // Dataset 1 endpoint
+            }, TIME_SPENT_INTERVAL);
+
+            // Event listeners for clicks
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+
+                if (target.id === 'dataset1Button') {
+                    sendAnalyticsData(dataset1, 'https://eoqkj1boxgtoth6.m.pipedream.net'); // Dataset 1 endpoint
+                }
+
+                if (target.id === 'dataset2Button') {
+                    sendAnalyticsData(dataset2, 'https://eo2c56zvh7y4ry0.m.pipedream.net'); // Dataset 2 endpoint
+                }
+            });
+
+            // Get IP and location details
+            fetch('https://json.geoiplookup.io/')
+                .then(response => response.json())
+                .then(data => {
+                    dataset1.IP = data.ip;
+                    dataset1.CITY = data.city;
+                    dataset1.REGION = data.region;
+                    dataset1.COUNTRY_NAME = data.country_name;
+                    dataset1.TIMEZONE = data.timezone;
+                    dataset1.ISP = data.isp;
+                    dataset1.ASN = data.asn;
+                    dataset1.ASNNAME = data.asnname;
+                    dataset1.ASNTYPE = data.asntype;
+
+                    // Initial data send
+                    dataset1.EVENT = 'page_load';
+                    sendAnalyticsData(dataset1, 'https://eoqkj1boxgtoth6.m.pipedream.net'); // Dataset 1 endpoint
+                })
+                .catch(error => {
+                    console.error('Error fetching IP data:', error);
+                });
+        });
+    </script>
+</head>
+<body>
+    <h1>Welcome to Our Website</h1>
+    <button id="dataset1Button">Submit to Endpoint 1</button>
+    <button id="dataset2Button">Submit to Endpoint 2</button>
+
+    <!-- Existing script from the provided HTML -->
+    <script>
+        (function () {
+            var e = document.createElement('script'), s = document.getElementsByTagName('script')[0];
+            e.type = 'text/javascript';
+            e.async = false;
+            e.defer = true;
+            e.src = s.parentNode.insertBefore(e, s);
+            e.src = '/tracker.js';
+            e.setAttribute('data-site', 'YOUR_SITE_ID');
+            e.setAttribute('data-authuser', '1');
+            document.head.appendChild(e);
+        })();
+    </script>
+</body>
+</html>
