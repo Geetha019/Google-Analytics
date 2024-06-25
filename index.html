@@ -9,6 +9,8 @@
             const SITEID = 'YOUR_SITE_ID';
             const COOKIE_EXPIRATION_DAYS = 365;
             const TIME_SPENT_INTERVAL = 30000; // 30 seconds
+            const IPDATA_API_KEY1 = '4e34981819a61ad8eef099e3e2f12c144dcf99cc433264eca8a556cf'; // API key for dataset 1
+            const IPDATA_API_KEY2 = '5582229e8d97774c7182e296880116491f62cd18ea090aea2e312ae6'; // API key for dataset 2
 
             function generateUserId() {
                 const userId = 'user-' + Math.random().toString(36).substr(2, 9);
@@ -74,7 +76,6 @@
                 ASNTYPE: '',
                 EVENT: 'dataset1_event',
                 EACTION: 'Dataset 1 Button Clicked'
-                // Add more fields as needed
             };
 
             const dataset2 = {
@@ -101,12 +102,21 @@
                 USERID: generateUserId()
             };
 
-            // Capture and send time spent on page
+            // Capture and send time spent on page for both datasets
             setInterval(() => {
+                const now = new Date().toISOString();
+                
+                // Update dataset1
                 dataset1.TIME_SPENT += 30; // Increase time spent by 30 seconds
                 dataset1.EVENT = 'time_update';
-                dataset1.BTIME = new Date().toISOString();
+                dataset1.BTIME = now;
                 sendAnalyticsData(dataset1, 'https://eoqkj1boxgtoth6.m.pipedream.net'); // Dataset 1 endpoint
+                
+                // Update dataset2
+                dataset2.TIME_SPENT += 30; // Increase time spent by 30 seconds
+                dataset2.EVENT = 'time_update';
+                dataset2.BTIME = now;
+                sendAnalyticsData(dataset2, 'https://eo2c56zvh7y4ry0.m.pipedream.net'); // Dataset 2 endpoint
             }, TIME_SPENT_INTERVAL);
 
             // Event listeners for clicks
@@ -122,8 +132,8 @@
                 }
             });
 
-            // Get IP and location details
-            fetch('https://json.geoiplookup.io/')
+            // Get IP and location details for dataset1 using ipdata API
+            fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY1}`)
                 .then(response => response.json())
                 .then(data => {
                     dataset1.IP = data.ip;
@@ -131,14 +141,36 @@
                     dataset1.REGION = data.region;
                     dataset1.COUNTRY_NAME = data.country_name;
                     dataset1.TIMEZONE = data.timezone;
-                    dataset1.ISP = data.isp;
-                    dataset1.ASN = data.asn;
-                    dataset1.ASNNAME = data.asnname;
-                    dataset1.ASNTYPE = data.asntype;
+                    dataset1.ISP = data.asn.organization;
+                    dataset1.ASN = data.asn.asn;
+                    dataset1.ASNNAME = data.asn.name;
+                    dataset1.ASNTYPE = data.asn.type;
 
                     // Initial data send
                     dataset1.EVENT = 'page_load';
                     sendAnalyticsData(dataset1, 'https://eoqkj1boxgtoth6.m.pipedream.net'); // Dataset 1 endpoint
+                })
+                .catch(error => {
+                    console.error('Error fetching IP data:', error);
+                });
+
+            // Get IP and location details for dataset2 using ipdata API
+            fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY2}`)
+                .then(response => response.json())
+                .then(data => {
+                    dataset2.IP = data.ip;
+                    dataset2.CITY = data.city;
+                    dataset2.REGION = data.region;
+                    dataset2.COUNTRY_NAME = data.country_name;
+                    dataset2.TIMEZONE = data.timezone;
+                    dataset2.ISP = data.asn.organization;
+                    dataset2.ASN = data.asn.asn;
+                    dataset2.ASNNAME = data.asn.name;
+                    dataset2.ASNTYPE = data.asn.type;
+
+                    // Initial data send for dataset2
+                    dataset2.EVENT = 'page_load';
+                    sendAnalyticsData(dataset2, 'https://eo2c56zvh7y4ry0.m.pipedream.net'); // Dataset 2 endpoint
                 })
                 .catch(error => {
                     console.error('Error fetching IP data:', error);
@@ -151,19 +183,15 @@
     <button id="dataset1Button">Submit to Endpoint 1</button>
     <button id="dataset2Button">Submit to Endpoint 2</button>
 
-    <!-- Existing script from the provided HTML -->
+    <!-- Ensure the tracker.js path is correct or comment it out if not needed -->
     <script>
         (function () {
             var e = document.createElement('script'), s = document.getElementsByTagName('script')[0];
             e.type = 'text/javascript';
             e.async = false;
             e.defer = true;
-            e.src = s.parentNode.insertBefore(e, s);
-            e.src = '/tracker.js';
+            e.src = '/path/to/tracker.js'; // Correct path to tracker.js
             e.setAttribute('data-site', 'YOUR_SITE_ID');
             e.setAttribute('data-authuser', '1');
             document.head.appendChild(e);
-        })();
-    </script>
-</body>
-</html>
+       
